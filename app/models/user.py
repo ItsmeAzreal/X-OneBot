@@ -1,5 +1,5 @@
 """User model for authentication and customer data."""
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Enum as SQLEnum
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Enum as SQLEnum, JSON
 from sqlalchemy.orm import relationship
 import enum
 from app.models.base import BaseModel

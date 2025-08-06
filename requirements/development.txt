@@ -6,13 +6,13 @@ pytest
 pytest-asyncio
 pytest-cov
 pytest-mock
-httpx-mock
+pytest-httpx      
 factory-boy
 faker
 
 # Debugging
 ipdb
-pdb
+pdbpp             
 
 # Code Quality
 black

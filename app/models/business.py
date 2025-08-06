@@ -1,5 +1,5 @@
 """Business model for multi-tenant architecture."""
-from sqlalchemy import Column, String, JSON, Boolean, Enum as SQLEnum
+from sqlalchemy import Column, String, JSON, Boolean, Enum as SQLEnum, DateTime
 from sqlalchemy.orm import relationship
 import enum
 from app.models.base import BaseModel

@@ -20,3 +20,10 @@ XoneBot is a universal AI assistant that automates cafe operations by replacing 
 ```bash
 git clone https://github.com/yourusername/xonebot-backend
 cd xonebot-backend
+
+
+Building on Week 1's foundation, we'll add:
+1. **Order Processing System** - Complete order lifecycle management
+2. **Real-time WebSocket Updates** - Live order status and notifications
+3. **Table Management with QR Codes** - Generate and manage QR codes for tables
+4. **Chat Integration Structure** - Foundation for AI chat system

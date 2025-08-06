@@ -1,4 +1,5 @@
 """Authentication endpoints."""
+from app.core.dependencies import get_current_user
 from datetime import timedelta
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status

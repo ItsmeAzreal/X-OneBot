@@ -1,5 +1,5 @@
 """Order model for order management."""
-from sqlalchemy import Column, String, Float, ForeignKey, Integer, JSON, Enum as SQLEnum, Text
+from sqlalchemy import Column, String, Float, ForeignKey, Integer, JSON, Enum as SQLEnum, Text, DateTime
 from sqlalchemy.orm import relationship
 import enum
 from app.models.base import BaseModel

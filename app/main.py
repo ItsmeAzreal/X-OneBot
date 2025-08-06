@@ -1,4 +1,4 @@
-"""Main FastAPI application."""
+"""Main FastAPI application with WebSocket support."""
 import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,10 +19,10 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configure CORS
+# Configure CORS (updated for WebSocket support)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=settings.BACKEND_CORS_ORIGINS + ["ws://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,7 +47,8 @@ async def root():
     return {
         "message": "Welcome to XoneBot API",
         "version": settings.VERSION,
-        "docs": "/docs"
+        "docs": "/docs",
+        "websocket": "/api/v1/chat/ws/{session_id}"
     }
 
 
@@ -73,6 +74,7 @@ async def startup_event():
     logging.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
     logging.info(f"Environment: {settings.ENVIRONMENT}")
     logging.info(f"Debug mode: {settings.DEBUG}")
+    logging.info("WebSocket support enabled")
 
 
 # Shutdown event
