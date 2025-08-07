@@ -1,5 +1,6 @@
 """Table schemas for API validation."""
 from typing import Optional
+from pydantic import BaseModel 
 from app.schemas.base import BaseSchema, TimestampSchema, IDSchema
 from app.models.table import TableStatus
 

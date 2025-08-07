@@ -1,5 +1,5 @@
 """Chat message schemas."""
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 from pydantic import BaseModel, Field
 from app.schemas.base import BaseSchema, TimestampSchema, IDSchema

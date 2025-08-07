@@ -1,7 +1,8 @@
 """Message model for chat history."""
-from sqlalchemy import Column, String, Integer, ForeignKey, Text, DateTime
+from sqlalchemy import Column, String, Integer, ForeignKey, Text, DateTime, JSON
 from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
+
 
 
 class Message(BaseModel):
@@ -34,7 +35,7 @@ class Message(BaseModel):
     response_time_ms = Column(Integer)
     
     # Additional metadata
-    metadata = Column(JSON, default=dict)
+    extra_data = Column(JSON, default=dict)
     
     # Relationships
     business = relationship("Business")

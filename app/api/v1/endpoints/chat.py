@@ -1,5 +1,5 @@
 """Chat endpoints for customer interactions."""
-from typing import Any, Optional
+from typing import Any, Optional, List
 from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 import uuid

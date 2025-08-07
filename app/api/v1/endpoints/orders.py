@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.config.database import get_db
-from app.core.dependencies import get_current_business, get_current_user
-from app.models import Order, OrderStatus, PaymentStatus, Business, User, MenuItem
+from app.core.dependencies import get_current_business, get_current_user_optional    
+from app.models import Order, OrderStatus, PaymentStatus, Business, User, MenuItem, PaymentMethod
 from app.schemas.order import (
     OrderCreate,
     OrderUpdate,
@@ -99,7 +99,7 @@ async def create_order(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     business: Business = Depends(get_current_business),
-    current_user: Optional[User] = None  # Optional for guest orders
+    current_user: Optional[User] = Depends(get_current_user_optional)  # Optional for guest orders
 ) -> Any:
     """
     Create a new order.

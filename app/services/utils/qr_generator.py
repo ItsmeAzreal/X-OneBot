@@ -6,7 +6,7 @@ from qrcode.image.styles.colormasks import SolidFillColorMask
 from PIL import Image, ImageDraw
 import io
 import requests
-from typing import Optional
+from typing import Optional, Dict
 
 
 class QRCodeGenerator:
