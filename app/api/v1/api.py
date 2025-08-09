@@ -6,7 +6,9 @@ from app.api.v1.endpoints import (
     menu,
     tables,
     orders,
-    chat,  # New in Week 2
+    chat,
+    voice,  # New in Week 3
+    whatsapp,  # New in Week 3
 )
 
 # Create main router
@@ -47,4 +49,16 @@ api_router.include_router(
     chat.router,
     prefix="/chat",
     tags=["Chat System"]
+)
+
+api_router.include_router(
+    voice.router,
+    prefix="/voice",
+    tags=["Voice Calls"]
+)
+
+api_router.include_router(
+    whatsapp.router,
+    prefix="/whatsapp",
+    tags=["WhatsApp"]
 )
