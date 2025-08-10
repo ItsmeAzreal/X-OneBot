@@ -27,3 +27,8 @@ Building on Week 1's foundation, we'll add:
 2. **Real-time WebSocket Updates** - Live order status and notifications
 3. **Table Management with QR Codes** - Generate and manage QR codes for tables
 4. **Chat Integration Structure** - Foundation for AI chat system
+
+
+uvicorn app.main:app --reload --port 8000
+
+ngrok http 8000
