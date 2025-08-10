@@ -12,6 +12,7 @@ from app.models.table import Table, TableStatus
 from app.models.order import Order, OrderStatus, PaymentStatus, PaymentMethod
 from app.models.message import Message 
 from app.models.phone_number import PhoneNumber, NumberStatus, NumberProvider
+
 # Export all models
 __all__ = [
     # Base
@@ -21,6 +22,7 @@ __all__ = [
     # Business
     "Business",
     "SubscriptionPlan",
+    "PhoneNumberType",
     
     # User
     "User", 
@@ -40,6 +42,11 @@ __all__ = [
     "PaymentStatus",
     "PaymentMethod",
 
-    # ADD Message to this list
+    # Message
     "Message",
+    
+    # Phone Number
+    "PhoneNumber",
+    "NumberStatus",
+    "NumberProvider",
 ]

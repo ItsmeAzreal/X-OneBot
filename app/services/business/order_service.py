@@ -1,4 +1,5 @@
 """Order processing business logic."""
+import uuid
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 from datetime import datetime
