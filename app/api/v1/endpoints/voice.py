@@ -1,9 +1,12 @@
-"""Voice call endpoints for Twilio integration."""
+"""
+Updated voice endpoints to handle multiple providers and forwarding.
+"""
 from fastapi import APIRouter, Request, Form, Depends
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ai.voice_handler import VoiceHandler
 from app.services.ai.universal_bot import UniversalBot
+from app.services.phone.multi_provider_manager import MultiProviderPhoneManager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,67 +17,80 @@ router = APIRouter()
 async def handle_incoming_call(
     request: Request,
     From: str = Form(...),
-    To: str = Form(...), # Capture the number that was called
+    To: str = Form(...),
     CallSid: str = Form(...),
+    ForwardedFrom: Optional[str] = Form(None),  # For forwarded calls
+    SipHeader_X_Extension: Optional[str] = Form(None),  # Extension code
     db: Session = Depends(get_db)
 ):
-    """Handle incoming voice call from Twilio."""
-    
-    # Process through universal bot first to get initial response
-    bot = UniversalBot(db)
-    response_data = await bot.process_message(
-        session_id=CallSid,
-        message="<CALL_START>", # Use a special message for the start of a call
-        channel="voice",
-        phone_number=To # Pass the number that was called to the bot
+    """Handle incoming voice call from any provider."""
+
+    # Check for extension code (forwarded calls)
+    extension = SipHeader_X_Extension or request.headers.get("X-Extension")
+
+    # Route the call
+    phone_manager = MultiProviderPhoneManager(db)
+    business_id = await phone_manager.route_incoming_call(
+        to_number=To,
+        from_number=From,
+        extension=extension
     )
 
-    # Convert to TwiML
+    # If specific business found, load their context
+    if business_id:
+        logger.info(f"Routed call to business {business_id}")
+        # Load business-specific greeting
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if business:
+            greeting = f"Welcome to {business.name}. How can I help you today?"
+        else:
+            greeting = "Welcome. How can I help you today?"
+    else:
+        # Universal number - needs café selection
+        greeting = "Welcome to XoneBot. Which café would you like to connect to?"
+
+    # Generate TwiML response
     voice_handler = VoiceHandler()
-    twiml_response = voice_handler.generate_initial_twiml(response_data)
-    
+    twiml_response = voice_handler.generate_greeting_twiml(greeting)
+
     return twiml_response
 
 
-@router.post("/process")
-async def process_voice_input(
+@router.post("/forward")
+async def handle_forwarding_request(
     request: Request,
-    SpeechResult: str = Form(None),
-    CallSid: str = Form(...),
-    From: str = Form(...),
-    To: str = Form(...), # Also capture 'To' here for context
     db: Session = Depends(get_db)
 ):
-    """Process voice input from caller."""
-    
-    voice_handler = VoiceHandler()
+    """Handle call forwarding setup requests."""
 
-    if not SpeechResult:
-        # No speech detected, generate a retry TwiML
-        twiml_response = voice_handler.generate_retry_twiml("I didn't hear anything. Please try again.")
-        return twiml_response
+    # This endpoint handles the forwarding logic
+    # when a café's existing number forwards to us
 
-    # Process spoken text through universal bot
-    bot = UniversalBot(db)
-    response_data = await bot.process_message(
-        session_id=CallSid,
-        message=SpeechResult,
-        channel="voice",
-        phone_number=To
-    )
-    
-    # Convert bot's text response back into TwiML for the user to hear
-    twiml_response = voice_handler.generate_response_twiml(response_data)
-    
-    return twiml_response
+    data = await request.form()
+    extension = data.get("Digits")  # Extension entered by system
 
+    if extension:
+        # Verify extension and route to business
+        phone_manager = MultiProviderPhoneManager(db)
 
-@router.post("/status")
-async def call_status(
-    request: Request,
-    CallSid: str = Form(...),
-    CallStatus: str = Form(...)
-):
-    """Handle call status updates from Twilio."""
-    logger.info(f"Call {CallSid} status: {CallStatus}")
-    return ""
+        # Find business by extension
+        phone_record = db.query(PhoneNumber).filter(
+            PhoneNumber.metadata["extension_code"].astext == extension
+        ).first()
+
+        if phone_record:
+            # Route to business bot
+            return f"""
+            <Response>
+                <Say>Connecting to {phone_record.business.name}</Say>
+                <Redirect>/api/v1/voice/business/{phone_record.business.id}</Redirect>
+            </Response>
+            """
+
+    # Extension not found
+    return """
+    <Response>
+        <Say>Invalid extension code. Please check your setup.</Say>
+        <Hangup/>
+    </Response>
+    """

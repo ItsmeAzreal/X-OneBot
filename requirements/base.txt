@@ -71,3 +71,7 @@ tiktoken==0.5.2
 
 # Caching
 diskcache==5.6.3
+
+# Additional phone providers
+vonage==3.5.0
+messagebird==2.1.0

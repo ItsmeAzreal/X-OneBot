@@ -66,6 +66,28 @@ class Settings(BaseSettings):
     WHATSAPP_VERIFY_TOKEN: Optional[str] = None
     
     STRIPE_SECRET_KEY: Optional[str] = None
+
+    # Add these new settings to your existing settings.py
+
+    # Phone Provider Settings
+    VONAGE_API_KEY: Optional[str] = None
+    VONAGE_API_SECRET: Optional[str] = None
+    VONAGE_APPLICATION_ID: Optional[str] = None
+
+    MESSAGEBIRD_API_KEY: Optional[str] = None
+
+    # Regional Phone Numbers
+    ESTONIA_RECEIVER_NUMBER: Optional[str] = None  # For receiving forwarded calls
+    LITHUANIA_RECEIVER_NUMBER: Optional[str] = None
+
+    # Provider Selection
+    DEFAULT_PHONE_PROVIDER: str = "twilio"  # Can be: twilio, vonage, messagebird
+    PREFERRED_PROVIDERS_BY_REGION: Dict[str, List[str]] = {
+    "LV": ["vonage", "messagebird"],  # Latvia
+    "EE": ["twilio", "vonage"],       # Estonia
+    "LT": ["vonage", "twilio"],       # Lithuania
+    
+    }
     
     # --- END: ADD THESE NEW SETTINGS ---
 
