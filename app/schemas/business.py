@@ -1,8 +1,10 @@
 """Business schemas."""
 from typing import Optional, Dict, Any
+from pydantic import BaseModel
 from datetime import datetime
 from app.schemas.base import BaseSchema, TimestampSchema, IDSchema
 from app.models.business import SubscriptionPlan
+from app.models.business import SubscriptionPlan, PhoneNumberType
 
 
 class BusinessBase(BaseSchema):
@@ -65,6 +67,20 @@ class BusinessResponse(BusinessBase, IDSchema, TimestampSchema):
                 }
             }
         
+class BusinessPhoneConfig(BaseModel):
+    """Request schema for setting up phone configuration."""
+    phone_config: PhoneNumberType
+    enable_whatsapp: bool = False
+
+class PhoneProvisioningResponse(BaseModel):
+    """Response schema after provisioning a number."""
+    business_id: int
+    universal_access: bool
+    custom_number: Optional[str] = None
+    whatsapp_enabled: bool
+    monthly_cost: float
+    message: str
+
 
 
 

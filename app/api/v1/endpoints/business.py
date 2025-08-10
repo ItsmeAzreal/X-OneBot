@@ -1,4 +1,5 @@
 """Updated business endpoints with phone configuration."""
+from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.config.database import get_db

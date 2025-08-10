@@ -21,13 +21,21 @@ redis
 # HTTP Client
 httpx
 
-# AI & ML Dependencies
-openai
-anthropic
-langchain
-qdrant-client
-langchain-openai
-langchain-anthropic
+# AI & LLM
+openai==1.12.0
+anthropic==0.18.1
+groq==0.4.2
+langchain==0.1.9
+langchain-openai==0.0.5
+langchain-anthropic==0.1.1
+
+# Vector Database
+qdrant-client==1.7.3
+sentence-transformers==2.3.1
+
+# Voice Processing
+elevenlabs==0.2.27
+pydub==0.25.1
 
 # Voice & Communication
 twilio
@@ -39,8 +47,6 @@ stripe
 python-dateutil
 pytz
 
-### **File: `requirements/base.txt`** (Add these lines)
-#```txt
 # WebSocket Support
 websockets
 python-socketio
@@ -57,31 +63,10 @@ asyncio-mqtt
 uuid
 
 # WhatsApp
-heyoo
-
-# AI & LLM
-openai==1.12.0
-anthropic==0.18.1
-groq==0.4.2
-langchain==0.1.9
-langchain-openai==0.0.5
-langchain-anthropic==0.1.1
-
-# Vector Database
-qdrant-client==1.7.3
-sentence-transformers==2.3.1
-
-# Voice Processing
-elevenlabs==0.2.27
-pydub==0.25.1
-speech-recognition==3.10.0
-
-# WhatsApp
-heyoo==0.0.8  # WhatsApp Business API wrapper
+heyoo==0.0.8
 
 # NLP & Language
 langdetect==1.0.9
-googletrans==4.0.0-rc1
 tiktoken==0.5.2
 
 # Caching

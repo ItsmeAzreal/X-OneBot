@@ -24,33 +24,51 @@ class Settings(BaseSettings):
     PORT: int = 8000
     
     # Environment
-    ENVIRONMENT: str = "development"  # development, staging, production
+    ENVIRONMENT: str = "development"
     DEBUG: bool = True
     
     # Database
     DATABASE_URL: str
-    DB_ECHO: bool = False  # Log SQL queries
+    DB_ECHO: bool = False
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
     
     # Security
-    SECRET_KEY: str  # Used for JWT encoding
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
     
-    # AI Services (for later)
+    # --- START: ADD THESE NEW SETTINGS ---
+    
+    # AI Language Models
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
-    
-    # External Services (for later)
+    GROQ_API_KEY: Optional[str] = None
+
+    # Voice Services
+    ELEVENLABS_API_KEY: Optional[str] = None
+    WHISPER_API_KEY: Optional[str] = None # Note: This will likely be the same as OPENAI_API_KEY
+
+    # Vector Database
+    QDRANT_URL: Optional[str] = "http://localhost:6333"
+    QDRANT_API_KEY: Optional[str] = None
+
+    # External Services (Twilio, WhatsApp, Stripe)
     TWILIO_ACCOUNT_SID: Optional[str] = None
     TWILIO_AUTH_TOKEN: Optional[str] = None
+    UNIVERSAL_BOT_NUMBER: Optional[str] = None
+
+    WHATSAPP_BUSINESS_TOKEN: Optional[str] = None
+    WHATSAPP_VERIFY_TOKEN: Optional[str] = None
+    
     STRIPE_SECRET_KEY: Optional[str] = None
     
+    # --- END: ADD THESE NEW SETTINGS ---
+
     class Config:
         """Pydantic config"""
         env_file = ".env"

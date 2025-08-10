@@ -2,7 +2,7 @@
 WhatsApp Business API Integration.
 Handles WhatsApp messaging through the universal bot.
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import aiohttp
 import logging
 from app.config.settings import settings

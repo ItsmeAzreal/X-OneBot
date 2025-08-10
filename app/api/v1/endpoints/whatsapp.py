@@ -1,5 +1,5 @@
 """WhatsApp webhook endpoints."""
-from fastapi import APIRouter, Request, Query, HTTPException
+from fastapi import APIRouter, Request, Query, HTTPException, Depends
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.external.whatsapp_service import WhatsAppService

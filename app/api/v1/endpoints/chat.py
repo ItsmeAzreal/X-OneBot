@@ -5,19 +5,21 @@ from sqlalchemy.orm import Session
 import uuid
 from datetime import datetime
 from app.config.database import get_db
-from app.models import Business, Table, Message
+# These two models are not used directly, so they can be removed from here
+# from app.models import Business, Table
+from app.models import Message # Message is used
+from app.models.table import TableStatus, Table # Import TableStatus and Table from the correct model
 from app.schemas.message import (
     ChatRequest,
     ChatResponse,
     ChatSession,
-    MessageCreate,
     MessageResponse
 )
 from app.services.websocket.connection_manager import manager
-from app.services.ai.chat_service import ChatService
+# CHANGE THIS LINE: Import the new class name
+from app.services.ai.chat_service import EnhancedChatService as ChatService
 
 router = APIRouter()
-
 
 @router.post("/message", response_model=ChatResponse)
 async def send_message(

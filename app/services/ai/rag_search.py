@@ -292,18 +292,5 @@ class RAGSearchService:
                 "score": result.score
             })
         
-        return similar_items
-    )
-    
-    return twiml_response
+        return similar_items 
 
-
-@router.post("/status")
-async def call_status(
-    request: Request,
-    CallSid: str = Form(...),
-    CallStatus: str = Form(...)
-):
-    """Handle call status updates."""
-    logger.info(f"Call {CallSid} status: {CallStatus}")
-    return ""

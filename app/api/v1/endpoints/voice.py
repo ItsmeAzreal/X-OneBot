@@ -14,17 +14,26 @@ router = APIRouter()
 async def handle_incoming_call(
     request: Request,
     From: str = Form(...),
+    To: str = Form(...), # Capture the number that was called
     CallSid: str = Form(...),
     db: Session = Depends(get_db)
 ):
     """Handle incoming voice call from Twilio."""
     
+    # Process through universal bot first to get initial response
+    bot = UniversalBot(db)
+    response_data = await bot.process_message(
+        session_id=CallSid,
+        message="<CALL_START>", # Use a special message for the start of a call
+        channel="voice",
+        phone_number=To # Pass the number that was called to the bot
+    )
+
+    # Convert to TwiML
     voice_handler = VoiceHandler()
+    twiml_response = voice_handler.generate_initial_twiml(response_data)
     
-    # Generate TwiML response
-    response = voice_handler.handle_incoming_call(From)
-    
-    return response
+    return twiml_response
 
 
 @router.post("/process")
@@ -33,65 +42,39 @@ async def process_voice_input(
     SpeechResult: str = Form(None),
     CallSid: str = Form(...),
     From: str = Form(...),
+    To: str = Form(...), # Also capture 'To' here for context
     db: Session = Depends(get_db)
 ):
     """Process voice input from caller."""
     
+    voice_handler = VoiceHandler()
+
     if not SpeechResult:
-        # No speech detected
-        return """
-        <Response>
-            <Say>I didn't hear anything. Please try again.</Say>
-            <Redirect>/api/v1/voice/incoming</Redirect>
-        </Response>
-        """
-    
-    # Process through universal bot
+        # No speech detected, generate a retry TwiML
+        twiml_response = voice_handler.generate_retry_twiml("I didn't hear anything. Please try again.")
+        return twiml_response
+
+    # Process spoken text through universal bot
     bot = UniversalBot(db)
-    response = await bot.process_message(
+    response_data = await bot.process_message(
         session_id=CallSid,
         message=SpeechResult,
-        channel="voice"
+        channel="voice",
+        phone_number=To
     )
     
-    # Convert to TwiML
-    voice_handler = VoiceHandler()
-    twiml_response = voice_handler.process_voice_input(
-        SpeechResult,
-        {"session_id": CallSid, "from": From, "response": response}# XoneBot Week 3: Complete AI Integration & Universal Bot System
+    # Convert bot's text response back into TwiML for the user to hear
+    twiml_response = voice_handler.generate_response_twiml(response_data)
+    
+    return twiml_response
 
-## 📋 Week 3 Overview
-Transform XoneBot into an intelligent, universal AI assistant that serves multiple cafés through intelligent routing, multi-language support, and advanced AI capabilities.
 
----
-
-## 🔧 Step 1: Update Environment Variables
-
-### **File: `.env`** (Add these new variables)
-```env
-# AI Models
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-GROQ_API_KEY=gsk_...
-
-# Voice Services
-ELEVENLABS_API_KEY=...
-WHISPER_API_KEY=...
-
-# Vector Database
-QDRANT_URL=http://localhost:6333
-QDRANT_API_KEY=...
-
-# WhatsApp
-WHATSAPP_BUSINESS_TOKEN=...
-WHATSAPP_VERIFY_TOKEN=...
-
-# Universal Bot Config
-UNIVERSAL_BOT_NUMBER=+1-800-CAFE-BOT
-DEFAULT_LANGUAGE=en
-SUPPORTED_LANGUAGES=en,es,fr,de,it,pt,zh,ja
-
-# AI Model Costs (per 1000 tokens)
-GROQ_COST=0.001
-CLAUDE_COST=0.01
-GPT4_COST=0.02
+@router.post("/status")
+async def call_status(
+    request: Request,
+    CallSid: str = Form(...),
+    CallStatus: str = Form(...)
+):
+    """Handle call status updates from Twilio."""
+    logger.info(f"Call {CallSid} status: {CallStatus}")
+    return ""

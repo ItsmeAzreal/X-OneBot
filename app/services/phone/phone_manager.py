@@ -172,7 +172,7 @@ class PhoneManager:
             # Search for available Latvian numbers
             available_numbers = self.twilio_client.available_phone_numbers("LV").local.list(
                 limit=10,
-                capabilities=["voice", "sms"]
+                # capabilities=["voice", "sms"]
             )
             
             if not available_numbers:
