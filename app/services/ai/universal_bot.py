@@ -3,6 +3,7 @@ Updated Universal Bot Service with dual-number support.
 Routes users to appropriate cafes based on number called.
 """
 from typing import Dict, Any, Optional, List
+from app.config.settings import settings
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models import Business, MenuItem, Table, PhoneNumber, PhoneNumberType

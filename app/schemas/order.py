@@ -1,7 +1,8 @@
 """Order schemas for API validation."""
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
+# Make sure field_validator is imported
+from pydantic import BaseModel, Field, field_validator 
 from app.schemas.base import BaseSchema, TimestampSchema, IDSchema
 from app.models.order import OrderStatus, PaymentStatus, PaymentMethod
 
@@ -15,11 +16,17 @@ class OrderItemSchema(BaseModel):
     customizations: Dict[str, Any] = {}
     subtotal: float = Field(gt=0)
     
+    # === FIX IS HERE ===
     @field_validator('subtotal')
-    def validate_subtotal(cls, v, values):
+    def validate_subtotal(cls, v, info): # Changed 'values' to 'info'
         """Ensure subtotal matches quantity * unit_price."""
-        expected = values.get('quantity', 0) * values.get('unit_price', 0)
-        if abs(v - expected) > 0.01:  # Allow small floating point differences
+        # Access the data dictionary through info.data
+        quantity = info.data.get('quantity', 0)
+        unit_price = info.data.get('unit_price', 0)
+        
+        expected = quantity * unit_price
+        # Allow for small floating point inaccuracies
+        if abs(v - expected) > 0.01:
             raise ValueError(f"Subtotal {v} doesn't match quantity * price {expected}")
         return v
 
@@ -27,7 +34,7 @@ class OrderItemSchema(BaseModel):
 class OrderBase(BaseSchema):
     """Base order fields."""
     table_id: Optional[int] = None
-    order_type: str = "dine-in"  # dine-in, takeout, delivery
+    order_type: str = "dine-in"
     special_instructions: Optional[str] = None
 
 

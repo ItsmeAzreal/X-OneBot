@@ -6,10 +6,8 @@ from app.config.database import get_db
 from app.core.dependencies import get_current_business
 from app.models import Business, PhoneNumberType
 from app.schemas.business import BusinessPhoneConfig, PhoneProvisioningResponse
-from app.services.external.phone_manager import PhoneManagerService
-from app.services.phone.providers.multi_provider_manager import MultiProviderPhoneManager as PhoneManager
-from app.services.phone.providers.multi_provider_manager import MultiProviderPhoneManager 
-
+# Correctly import the single manager class
+from app.services.phone.providers.multi_provider_manager import MultiProviderPhoneManager
 
 router = APIRouter()
 
@@ -22,34 +20,30 @@ async def setup_phone_configuration(
     current_business: Business = Depends(get_current_business)
 ) -> Any:
     """
-    Configure phone setup for business during onboarding.
-    
-    Options:
-    1. Universal only (free)
-    2. Custom only (paid)
-    3. Both (paid premium)
+    Configure phone setup for a business.
     """
-    
-    # Verify business ownership
     if current_business.id != business_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to configure this business"
         )
     
-    phone_manager = PhoneManager(db)
+    # Use the corrected PhoneManager
+    phone_manager = MultiProviderPhoneManager(db)
     
-    # Process phone configuration
     result = phone_manager.onboard_business(
         business_id=business_id,
         phone_config=config.phone_config,
         wants_whatsapp=config.enable_whatsapp
     )
     
+    if result is None:
+        raise HTTPException(status_code=404, detail="Business not found")
+
     return PhoneProvisioningResponse(
         business_id=result["business_id"],
         universal_access=result["universal_access"],
-        custom_number=result["custom_number"],
+        custom_number=result.get("custom_number"),
         whatsapp_enabled=result["whatsapp_enabled"],
         monthly_cost=result["monthly_cost"],
         message="Phone configuration successful"
@@ -62,13 +56,9 @@ async def get_phone_status(
     db: Session = Depends(get_db),
     current_business: Business = Depends(get_current_business)
 ) -> Any:
-    """Get current phone configuration and usage for business."""
-    
+    """Get current phone configuration and usage for a business."""
     if current_business.id != business_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
     phone_manager = MultiProviderPhoneManager(db)
     usage = phone_manager.check_usage_limits(business_id)
@@ -89,17 +79,17 @@ async def get_phone_status(
 @router.post("/{business_id}/transfer-to-human")
 async def initiate_human_transfer(
     business_id: int,
-    call_sid: str,
+    body: dict, # Accept call_sid from the request body
     db: Session = Depends(get_db),
     current_business: Business = Depends(get_current_business)
 ) -> Any:
     """Initiate transfer to human staff (custom numbers only)."""
-    
+    call_sid = body.get("call_sid")
+    if not call_sid:
+        raise HTTPException(status_code=400, detail="call_sid is required in the request body")
+
     if current_business.id != business_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
     if current_business.phone_config == PhoneNumberType.UNIVERSAL_ONLY:
         raise HTTPException(
@@ -107,13 +97,10 @@ async def initiate_human_transfer(
             detail="Human transfer not available for universal-only configuration"
         )
     
-    phone_manager = PhoneManager(db)
+    phone_manager = MultiProviderPhoneManager(db)
     success = phone_manager.transfer_to_human(business_id, call_sid)
     
     if success:
         return {"status": "success", "message": "Transfer initiated"}
     else:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Transfer failed"
-        )
+        raise HTTPException(status_code=500, detail="Transfer failed")
