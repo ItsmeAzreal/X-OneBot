@@ -1,7 +1,7 @@
 """Order schemas for API validation."""
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from app.schemas.base import BaseSchema, TimestampSchema, IDSchema
 from app.models.order import OrderStatus, PaymentStatus, PaymentMethod
 
@@ -15,7 +15,7 @@ class OrderItemSchema(BaseModel):
     customizations: Dict[str, Any] = {}
     subtotal: float = Field(gt=0)
     
-    @validator('subtotal')
+    @field_validator('subtotal')
     def validate_subtotal(cls, v, values):
         """Ensure subtotal matches quantity * unit_price."""
         expected = values.get('quantity', 0) * values.get('unit_price', 0)
@@ -39,7 +39,7 @@ class OrderCreate(OrderBase):
     customer_email: Optional[str] = None
     payment_method: PaymentMethod = PaymentMethod.CASH
     
-    @validator('items')
+    @field_validator('items')
     def validate_items(cls, v):
         """Ensure order has at least one item."""
         if not v:

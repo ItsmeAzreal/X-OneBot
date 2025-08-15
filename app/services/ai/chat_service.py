@@ -8,7 +8,7 @@ from datetime import datetime
 import uuid
 from app.models import Message, Business, MenuItem
 from app.services.ai.universal_bot import UniversalBot
-from app.services.ai.response_generator import ResponseGenerator
+#from app.services.ai.response_generator import ResponseGenerator
 from app.services.ai.personality_engine import PersonalityEngine
 import logging
 
@@ -31,7 +31,7 @@ class EnhancedChatService:
         self.db = db
         self.business_id = business_id
         self.universal_bot = UniversalBot(db)
-        self.response_generator = ResponseGenerator()
+        #self.response_generator = ResponseGenerator()
         self.personality_engine = PersonalityEngine()
     
     async def process_message(

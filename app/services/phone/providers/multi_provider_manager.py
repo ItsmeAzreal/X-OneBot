@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.services.phone.providers.base import BasePhoneProvider, PhoneNumberInfo
 from app.services.phone.providers.twilio_provider import TwilioProvider
 from app.services.phone.providers.vonage_provider import VonageProvider
-from app.services.phone.existing_number_manager import ExistingNumberManager
+from app.services.phone.providers.existing_number_manager import ExistingNumberManager
 from app.models import Business, PhoneNumber, PhoneNumberType
 import logging
 

@@ -10,7 +10,7 @@ from app.services.ai.intent_detection import IntentDetector, Intent
 from app.services.ai.model_router import ModelRouter
 from app.services.ai.rag_search import RAGSearchService
 from app.services.ai.chat_memory import ChatMemory
-from app.services.phone.phone_manager import PhoneManager
+from app.services.phone.providers.multi_provider_manager import MultiProviderPhoneManager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class UniversalBot:
         self.intent_detector = IntentDetector()
         self.model_router = ModelRouter()
         self.rag_service = RAGSearchService(db)
-        self.phone_manager = PhoneManager(db)
+        self.phone_manager = MultiProviderPhoneManager(db)
     
     async def process_message(
         self,

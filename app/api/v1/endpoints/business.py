@@ -6,7 +6,10 @@ from app.config.database import get_db
 from app.core.dependencies import get_current_business
 from app.models import Business, PhoneNumberType
 from app.schemas.business import BusinessPhoneConfig, PhoneProvisioningResponse
-from app.services.phone.phone_manager import PhoneManager
+from app.services.external.phone_manager import PhoneManagerService
+from app.services.phone.providers.multi_provider_manager import MultiProviderPhoneManager as PhoneManager
+from app.services.phone.providers.multi_provider_manager import MultiProviderPhoneManager 
+
 
 router = APIRouter()
 
@@ -67,7 +70,7 @@ async def get_phone_status(
             detail="Not authorized"
         )
     
-    phone_manager = PhoneManager(db)
+    phone_manager = MultiProviderPhoneManager(db)
     usage = phone_manager.check_usage_limits(business_id)
     
     return {

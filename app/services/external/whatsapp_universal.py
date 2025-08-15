@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 from app.models import Business, User, Order
 from app.services.ai.language_service import LanguageService
-from app.services.ai.chat_service import ChatService
+from app.services.ai.chat_service import EnhancedChatService as ChatService
 from app.schemas.whatsapp import WhatsAppMessage, WhatsAppInteractiveMessage
 
 logger = logging.getLogger(__name__)

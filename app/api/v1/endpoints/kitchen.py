@@ -1,5 +1,5 @@
 """Kitchen display and management endpoints."""
-from typing import Any, List
+from typing import Any, List, Dict
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session

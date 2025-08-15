@@ -1,5 +1,5 @@
 """Admin dashboard endpoints."""
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, WebSocket
 from sqlalchemy.orm import Session
