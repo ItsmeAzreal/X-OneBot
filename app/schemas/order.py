@@ -109,7 +109,6 @@ class OrderResponse(OrderBase, IDSchema, TimestampSchema):
 
 class OrderStatusUpdate(BaseModel):
     """WebSocket message for order status updates."""
-    order_id: int
     status: OrderStatus
     message: Optional[str] = None
     estimated_time: Optional[int] = None  # minutes

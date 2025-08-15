@@ -17,22 +17,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def seed_data():
-    """Add sample data to database."""
-    db: Session = SessionLocal()
-    
+def seed_data(db: Session):
+    """Add sample data to the provided database session."""
     try:
-        # Check if a business has already been created
         if db.query(Business).first():
             logger.info("Database already has data. Skipping seed.")
-            # This return statement correctly exits the entire function.
             return
-        
-        # === FIX: All data creation logic is now correctly inside this block ===
-        
+
         logger.info("Seeding database with sample data...")
-        
-        # 1. Create the Business with the correct phone config from the start
+
+        # 1. Create the Business
         business = Business(
             name="Demo Cafe",
             slug="demo-cafe",
@@ -44,10 +38,13 @@ def seed_data():
             branding_config={"primary_color": "#FF6B6B", "bot_personality": "friendly"}
         )
         db.add(business)
-        db.commit()
-        db.refresh(business) # Refresh to get the business.id
-        
-        # 2. Create an Admin User for the Business
+
+        # --- START FIX ---
+        # Flush the session to persist the business and generate its ID
+        db.flush()
+        # --- END FIX ---
+
+        # 2. Create an Admin User for the Business (now business.id is available)
         admin = User(
             email="admin@democafe.com",
             hashed_password=get_password_hash("demo123456"),
@@ -61,25 +58,29 @@ def seed_data():
         phone_number = PhoneNumber(
             business_id=business.id,
             phone_number="+18005550199",
-            is_universal=True, # This is crucial for the bot to find the cafe
-            status=NumberStatus.ACTIVE
+            is_universal=True,
+            status=NumberStatus.ACTIVE,
+            provider=NumberProvider.TWILIO # Ensure this enum is set
         )
         db.add(phone_number)
-        
+
+        # Commit the entire transaction
         db.commit()
-        
+
         logger.info("Sample data created successfully!")
-        logger.info("\n=== Test Credentials ===")
-        logger.info("Admin: admin@democafe.com / demo123456")
-        logger.info("========================\n")
-        
+
     except Exception as e:
         logger.error(f"Error seeding database: {e}")
         db.rollback()
         raise
-    finally:
-        db.close()
 
 
 if __name__ == "__main__":
-    seed_data()
+    db_session = SessionLocal()
+    try:
+        seed_data(db_session)
+        logger.info("\n=== Manual Seed Credentials ===")
+        logger.info("Admin: admin@democafe.com / demo123456")
+        logger.info("========================\n")
+    finally:
+        db_session.close()
