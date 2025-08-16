@@ -1,6 +1,6 @@
 """
-Updated Universal Bot Service with dual-number support.
-Routes users to appropriate cafes based on number called.
+AI-Powered Universal Bot - Let the LLMs handle everything naturally.
+No templates, no scripts, just pure AI intelligence.
 """
 from typing import Dict, Any, Optional, List
 from app.config.settings import settings
@@ -19,12 +19,14 @@ logger = logging.getLogger(__name__)
 
 class UniversalBot:
     """
-    Updated universal bot with dual-number awareness.
+    AI-Powered Universal Bot.
     
-    Flow:
-    1. Identify if call is to universal or custom number
-    2. Route appropriately based on configuration
-    3. Handle transfer to human when needed
+    Let the LLMs handle:
+    - Language detection and switching
+    - Natural conversation flow
+    - Context awareness
+    - Personality and tone
+    - Everything a human assistant would do
     """
     
     def __init__(self, db: Session):
@@ -39,181 +41,236 @@ class UniversalBot:
         session_id: str,
         message: str,
         channel: str = "chat",
-        phone_number: Optional[str] = None,  # Number that was called
+        phone_number: Optional[str] = None,
         location: Optional[Dict[str, float]] = None
     ) -> Dict[str, Any]:
         """
-        Process message with phone number awareness.
+        Process message with pure AI intelligence - no templates.
         """
         
         # Initialize or load memory
         memory = ChatMemory(session_id)
         context = memory.get_context()
         
-        # Check if this is a custom number call
+        # Add user message to memory
+        memory.add_message("user", message)
+        
+        # Check if this is a custom number call (direct business routing)
         if phone_number and phone_number != settings.UNIVERSAL_BOT_NUMBER:
-            # Direct custom number - route directly to business
             business_id = self.phone_manager.route_incoming_call(phone_number, "")
             if business_id:
                 context["selected_business"] = business_id
                 memory.update_context({"selected_business": business_id})
                 logger.info(f"Routed to business {business_id} via custom number {phone_number}")
         
-        # Add user message to memory
-        memory.add_message("user", message)
-        
-        # Detect intent and language
-        intent, language, entities = self.intent_detector.detect_intent(
-            message, context
-        )
-        
-        # Check for human transfer request
-        if intent == Intent.HUMAN_REQUEST and context.get("selected_business"):
-            return await self._handle_human_transfer(
-                context["selected_business"],
-                session_id,
-                channel
-            )
-        
-        # Update context with language
-        if language != context.get("language"):
-            memory.update_context({"language": language})
-        
-        # Route based on state and intent
+        # Route based on conversation state
         if not context.get("selected_business"):
-            response = await self._handle_cafe_selection(
-                message, memory
-            )
+            # No café selected yet - handle café selection with AI
+            response = await self._ai_handle_cafe_selection(message, memory, context)
         else:
-            # Cafe selected, handle normal interaction
-            business = self.db.query(Business).filter(
-                Business.id == context["selected_business"]
-            ).first()
-            
-            # This is a placeholder for your business interaction logic
-            # Ensure you have a method to handle this part of the conversation
-            response = await self._handle_business_interaction(
-                message, intent, context, memory
-            )
+            # Café selected - handle business conversation with AI
+            response = await self._ai_handle_business_conversation(message, memory, context)
 
         # Add bot response to memory
         memory.add_message("assistant", response.get("message", ""))
         
         return response
 
-    async def _handle_business_interaction(
+    async def _ai_handle_cafe_selection(
         self,
         message: str,
-        intent: Intent,
-        context: dict,
-        memory: ChatMemory
-    ) -> Dict[str, Any]:
-        # Placeholder for business-specific logic (e.g., ordering, menu questions)
-        # For the test to pass, we need to handle the "menu" keyword.
-        if "menu" in message.lower():
-            return {"message": "Here is the menu for the selected cafe."}
-        
-        return {"message": "How can I help you at this cafe?"}
-
-    async def _handle_human_transfer(
-        self,
-        business_id: int,
-        session_id: str,
-        channel: str
-    ) -> Dict[str, Any]:
-        """Handle request to transfer to human."""
-        
-        business = self.db.query(Business).filter(
-            Business.id == business_id
-        ).first()
-        
-        # Check if business has human transfer capability
-        if business.phone_config == PhoneNumberType.UNIVERSAL_ONLY:
-            return {
-                "message": "I apologize, but direct staff transfer is not available on the universal number. You can reach our staff at the number listed on our website.",
-                "transfer_available": False
-            }
-        
-        if channel == "voice":
-            # Attempt to transfer the call
-            success = self.phone_manager.transfer_to_human(business_id, session_id)
-            
-            if success:
-                return {
-                    "message": "Transferring you to our staff now. Please hold.",
-                    "action": "transfer",
-                    "transfer_initiated": True
-                }
-            else:
-                return {
-                    "message": "I'm sorry, our staff is not available right now. Please leave a message or try again later.",
-                    "transfer_failed": True
-                }
-        else:
-            # For chat/WhatsApp, provide staff contact
-            staff_contact = business.contact_info.get("staff_phone", "Not available")
-            return {
-                "message": f"To speak with our staff directly, please call {staff_contact}. They'll be happy to help you!",
-                "staff_contact": staff_contact
-            }
-    
-    async def _handle_cafe_selection(
-        self,
-        message: str,
-        memory: ChatMemory
+        memory: ChatMemory,
+        context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Handle cafe selection for the universal number.
-        This is now the primary entry point if no cafe is selected.
+        Let AI handle café selection naturally - no scripts.
         """
-        # --- START FIX ---
         
-        # First, find all businesses configured for universal access.
+        # Get available cafés
         cafes = self._find_businesses_with_universal_access()
-
-        # Check if the user's message already contains the name of one of the available cafes.
+        
+        if not cafes:
+            # Let AI handle "no cafés available" naturally
+            prompt = f"""
+            You are XoneBot, a helpful café assistant. A customer said: "{message}"
+            
+            Unfortunately, no cafés are currently available on our universal service.
+            
+            Respond naturally in their language (detect it automatically). Be apologetic but helpful.
+            Suggest they try again later or provide alternative help.
+            """
+            
+            ai_response = await self.model_router.route_query(
+                query=prompt,
+                context={"no_cafes": True},
+                language="auto"
+            )
+            
+            return {
+                "message": ai_response["response"],
+                "state": "no_cafes",
+                "model_used": ai_response.get("model_used")
+            }
+        
+        # Check if user mentioned a specific café
+        selected_cafe = None
         for cafe in cafes:
             if cafe.name.lower() in message.lower():
-                memory.update_context({"selected_business": cafe.id})
-                logger.info(f"Cafe '{cafe.name}' selected by user message.")
-                return {
-                    "message": f"Great! Connecting you to {cafe.name}. How can I help you today?",
-                    "state": "cafe_selected"
-                }
-
-        # If no cafes are found in the database, inform the user.
-        if not cafes:
-            logger.warning("No businesses found with universal phone access during cafe selection.")
+                selected_cafe = cafe
+                break
+        
+        if selected_cafe:
+            # User selected a café - welcome them naturally
+            memory.update_context({"selected_business": selected_cafe.id})
+            
+            prompt = f"""
+            You are XoneBot, a helpful café assistant. A customer said: "{message}" and selected {selected_cafe.name}.
+            
+            Welcome them warmly to {selected_cafe.name} in their language (detect automatically).
+            Be enthusiastic and ask how you can help them today.
+            Sound like a real, friendly café worker would.
+            """
+            
+            ai_response = await self.model_router.route_query(
+                query=prompt,
+                context={"selected_cafe": selected_cafe.name},
+                language="auto"
+            )
+            
             return {
-                "message": "No cafes are currently available on our universal service. Please try again later.",
-                "state": "no_cafes"
+                "message": ai_response["response"],
+                "state": "cafe_selected",
+                "model_used": ai_response.get("model_used")
             }
         
-        # If cafes are available but none were mentioned, list them for the user.
-        cafe_list = [f"{i}. {cafe.name}" for i, cafe in enumerate(cafes, 1)]
-        response_text = (
-            "Welcome to XoneBot! I can connect you to these cafes:\n\n" +
-            "\n".join(cafe_list) +
-            "\n\nWhich one would you like?"
+        # No café selected yet - show options naturally
+        cafe_names = [cafe.name for cafe in cafes]
+        cafe_list = "\n".join([f"{i+1}. {name}" for i, name in enumerate(cafe_names)])
+        
+        prompt = f"""
+        You are XoneBot, a helpful café assistant. A customer said: "{message}"
+        
+        Available cafés:
+        {cafe_list}
+        
+        Respond naturally in their language (detect automatically). Help them choose a café.
+        Be conversational and friendly, like a real person would be.
+        Don't be robotic - sound enthusiastic about helping them find a great place!
+        """
+        
+        ai_response = await self.model_router.route_query(
+            query=prompt,
+            context={"available_cafes": cafe_names},
+            language="auto"
         )
         
-        # Store the cafes we offered in the session memory for context.
-        memory.update_context({
-            "nearby_cafes": [{"id": c.id, "name": c.name} for c in cafes]
-        })
+        memory.update_context({"nearby_cafes": [{"id": c.id, "name": c.name} for c in cafes]})
         
         return {
-            "message": response_text,
-            "suggested_actions": [cafe.name for cafe in cafes[:3]],
-            "state": "selecting_cafe"
+            "message": ai_response["response"],
+            "suggested_actions": cafe_names[:3],
+            "state": "selecting_cafe",
+            "model_used": ai_response.get("model_used")
         }
-        # --- END FIX ---
-    
+
+    async def _ai_handle_business_conversation(
+        self,
+        message: str,
+        memory: ChatMemory,
+        context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Let AI handle business conversation naturally - full intelligence.
+        """
+        
+        business_id = context.get("selected_business")
+        business = self.db.query(Business).filter(Business.id == business_id).first()
+        
+        if not business:
+            prompt = f"""
+            You are XoneBot. A customer said: "{message}" but there's a technical issue.
+            
+            Apologize naturally in their language (detect automatically) and ask them to try again.
+            Be helpful and professional.
+            """
+            
+            ai_response = await self.model_router.route_query(
+                query=prompt,
+                context={"error": True},
+                language="auto"
+            )
+            
+            return {"message": ai_response["response"]}
+        
+        # Get menu items for context
+        menu_items = self.db.query(MenuItem).filter(
+            MenuItem.business_id == business_id,
+            MenuItem.is_available == True
+        ).all()
+        
+        # Build rich context for AI
+        menu_context = []
+        for item in menu_items:
+            menu_context.append({
+                "name": item.name,
+                "description": item.description,
+                "price": f"€{item.base_price}",
+                "dietary_tags": item.dietary_tags,
+                "allergens": item.allergens
+            })
+        
+        # Get conversation history for context
+        conversation_history = memory.get_conversation_history(limit=5)
+        history_text = "\n".join([
+            f"{msg['role'].title()}: {msg['content']}" 
+            for msg in conversation_history[-3:]  # Last 3 messages
+        ])
+        
+        # Let AI handle everything naturally
+        prompt = f"""
+        You are a helpful assistant at {business.name}. A customer just said: "{message}"
+        
+        Business Context:
+        - Café name: {business.name}
+        - You're helping with orders, questions, bookings, etc.
+        
+        Available Menu:
+        {menu_context[:10]}  # First 10 items
+        
+        Recent Conversation:
+        {history_text}
+        
+        Instructions:
+        - Detect their language automatically and respond in the same language
+        - Be natural, friendly, and conversational like a real café worker
+        - Help with orders, menu questions, table bookings, hours, anything they need
+        - If they want to order, help them through it naturally
+        - If they ask about menu, show relevant items with prices
+        - If they want to book a table, help them with that
+        - Be enthusiastic about your café and make them feel welcome
+        - Don't be robotic - sound human and warm
+        
+        Respond as a real person would, not like a scripted bot.
+        """
+        
+        ai_response = await self.model_router.route_query(
+            query=prompt,
+            context={
+                "business_name": business.name,
+                "menu_items": menu_context,
+                "conversation_history": conversation_history
+            },
+            language="auto"
+        )
+        
+        return {
+            "message": ai_response["response"],
+            "business_context": business.name,
+            "model_used": ai_response.get("model_used")
+        }
+
     def _find_businesses_with_universal_access(self) -> List[Business]:
-        """
-        Find all businesses that have universal number access.
-        This query is more direct and reliable.
-        """
+        """Find all businesses that have universal number access."""
         return self.db.query(Business).filter(
             Business.is_active == True,
             Business.phone_config.in_([

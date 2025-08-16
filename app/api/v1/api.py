@@ -10,7 +10,8 @@ from app.api.v1.endpoints import (
     universal,    # NEW
     dashboard,    # NEW
     kitchen,      # NEW
-    onboarding,   # NEW
+    onboarding,
+    voice,    # NEW
 )
 
 # Create main router
@@ -53,7 +54,6 @@ api_router.include_router(
     tags=["Chat System"]
 )
 
-# NEW ROUTERS FOR WEEK 4
 api_router.include_router(
     universal.router,
     prefix="/universal",
@@ -76,4 +76,10 @@ api_router.include_router(
     onboarding.router,
     prefix="/onboarding",
     tags=["Onboarding"]
+)
+
+api_router.include_router(
+    voice.router,
+    prefix="/voice",
+    tags=["Voice System"]
 )

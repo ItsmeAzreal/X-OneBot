@@ -1,12 +1,15 @@
 """
 Updated voice endpoints to handle multiple providers and forwarding.
 """
+from typing import Optional 
+from app.models import Business, PhoneNumber
+from twilio.twiml.voice_response import VoiceResponse
 from fastapi import APIRouter, Request, Form, Depends
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ai.voice_handler import VoiceHandler
 from app.services.ai.universal_bot import UniversalBot
-from app.services.phone.multi_provider_manager import MultiProviderPhoneManager
+from app.services.phone.providers.multi_provider_manager import MultiProviderPhoneManager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -49,11 +52,12 @@ async def handle_incoming_call(
         # Universal number - needs café selection
         greeting = "Welcome to XoneBot. Which café would you like to connect to?"
 
-    # Generate TwiML response
-    voice_handler = VoiceHandler()
-    twiml_response = voice_handler.generate_greeting_twiml(greeting)
-
-    return twiml_response
+    # Generate the TwiML response directly here
+    response = VoiceResponse()
+    response.say(greeting, voice="Polly.Joanna")
+    
+    # Return the response as a string-like object for FastAPI to handle
+    return str(response)
 
 
 @router.post("/forward")

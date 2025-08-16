@@ -45,6 +45,10 @@ class ModelRouter:
     def __init__(self):
         # Initialize models
         self.groq_client = Groq(api_key=settings.GROQ_API_KEY)
+        self.groq = ChatOpenAI(
+            openai_api_key=settings.GROQ_API_KEY,
+            model_name="llama3-8b-8192"
+        )
         self.claude = ChatAnthropic(
             anthropic_api_key=settings.ANTHROPIC_API_KEY,
             model_name="claude-3-sonnet-20240229"
@@ -149,14 +153,14 @@ class ModelRouter:
         language: str
     ) -> ModelType:
         """Select primary model based on complexity."""
-        if complexity == QueryComplexity.SIMPLE:
-            return ModelType.GROQ
-        elif complexity == QueryComplexity.COMPLEX:
-            return ModelType.CLAUDE
-        elif complexity == QueryComplexity.MULTILINGUAL:
-            return ModelType.GPT4
-        else:  # MODERATE
-            return ModelType.GROQ  # Try cheap first
+        # if complexity == QueryComplexity.SIMPLE:
+        #     return ModelType.GROQ
+        # elif complexity == QueryComplexity.COMPLEX:
+        #     return ModelType.CLAUDE
+        # elif complexity == QueryComplexity.MULTILINGUAL:
+        #     return ModelType.GPT4
+        # else:  # MODERATE
+        return ModelType.GROQ  # Try cheap first
     
     async def _execute_with_fallback(
         self,
@@ -169,9 +173,9 @@ class ModelRouter:
         # Define fallback chains
         fallback_chains = {
             ModelType.GROQ: [ModelType.GROQ, ModelType.GPT3_5, ModelType.CLAUDE],
-            ModelType.CLAUDE: [ModelType.CLAUDE, ModelType.GPT4, ModelType.GPT3_5],
-            ModelType.GPT4: [ModelType.GPT4, ModelType.CLAUDE, ModelType.GPT3_5],
-            ModelType.GPT3_5: [ModelType.GPT3_5, ModelType.GROQ, ModelType.CLAUDE]
+            # ModelType.CLAUDE: [ModelType.CLAUDE, ModelType.GPT4, ModelType.GPT3_5],
+            # ModelType.GPT4: [ModelType.GPT4, ModelType.CLAUDE, ModelType.GPT3_5],
+            # ModelType.GPT3_5: [ModelType.GPT3_5, ModelType.GROQ, ModelType.CLAUDE]
         }
         
         chain = fallback_chains[primary_model]
@@ -208,7 +212,7 @@ class ModelRouter:
         
         if model_type == ModelType.GROQ:
             response = self.groq_client.chat.completions.create(
-                model="mixtral-8x7b-32768",
+                model="llama3-8b-8192",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=500
